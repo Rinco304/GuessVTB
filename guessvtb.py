@@ -12,6 +12,7 @@ sv_help = '''
 [猜vtb] 开始游戏
 [猜vtb排行榜] 查看本群此游戏排行榜
 [添加v别名 uid 别名1,别名2,...] 为此虚拟主播添加别名，可批量添加(使用 , 分隔)
+例：添加v别名 327711614 本子助手,米露可
 [查v别名 uid] 查询此vtb当前拥有的别名
 [删除v别名 uid 别名1,别名2,...] 删除此虚拟主播的别名(仅维护组使用)
 [更新vtb列表] 同步数据网站的vtb列表(仅维护组使用)
@@ -159,7 +160,7 @@ async def up_guess(bot, ev: CQEvent):
         # 准备头像
         content = await (await aiorequests.get(await get_facelink_by_uid(selected_vtb["mid"]))).content
         image = Image.open(io.BytesIO(content))
-        # 切割图
+        # 切割图，这里不做处理直接发送原头像
         # left = math.floor(random.random()*(129-PIC_SIDE_LENGTH))
         # upper = math.floor(random.random()*(129-PIC_SIDE_LENGTH))
         # cropped = img.crop((left, upper, left+PIC_SIDE_LENGTH, upper+PIC_SIDE_LENGTH))
@@ -196,7 +197,7 @@ async def on_input_chara_name(bot, ev: CQEvent):
                 user_card_dict = await get_user_card_dict(bot, ev.group_id)
                 user_card = uid2card(ev.user_id, user_card_dict)
                 msg_part = f'{user_card}猜对了，真厉害！TA已经猜对{winning_count}次了~\n(此轮游戏将在时间到后自动结束，请耐心等待)若答对别名了但未成功可以帮忙添加一下别名~'
-                # c = chara.fromid(winner_judger.get_correct_chara_id(ev.group_id))
+                # 因为两次消息在不同的函数中，这里再次发出请求获得头像（待优化）
                 content = await (await aiorequests.get(await get_facelink_by_uid(winner_judger.get_correct_chara_id(ev.group_id)))).content
                 image = Image.open(io.BytesIO(content))
                 cropped = MessageSegment.image(util.pic2b64(image))
@@ -265,7 +266,7 @@ async def update_list(bot,ev:CQEvent):
         await bot.send(ev, '更新列表时出现异常：' + str(e))
 
 
-@sv.on_prefix(('更新v粉丝限制', '更新v粉丝限制', '更新vtb粉丝限制', '更新VTB粉丝限制'))
+@sv.on_prefix(('更新v粉丝限制', '更新V粉丝限制', '更新vtb粉丝限制', '更新VTB粉丝限制'))
 async def update_fans_limit(bot,ev:CQEvent):
     global FANS_LIMIT
     if not priv.check_priv(ev, priv.SUPERUSER):
